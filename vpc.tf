@@ -74,13 +74,14 @@ resource "ibm_is_public_address_range" "public_address_range_instance" {
 }
 
 resource "ibm_is_virtual_network_interface" "vni-active" {
-  for_each                  = local.active
-  name                      = "${var.CLUSTER_NAME}-fgt1-${each.key}-${random_string.random_suffix.result}"
-  allow_ip_spoofing         = false
-  auto_delete               = false
-  enable_infrastructure_nat = true
-  security_groups           = [local.sg_map[each.key]]
-  resource_group            = data.ibm_resource_group.rg.id
+  for_each                      = local.active
+  name                          = "${var.CLUSTER_NAME}-fgt1-${each.key}-${random_string.random_suffix.result}"
+  allow_ip_spoofing             = each.key == "interface2" # port2 - trusted data interface
+  protocol_state_filtering_mode = each.key == "interface2" ? "disabled" : null
+  auto_delete                   = false
+  enable_infrastructure_nat     = true
+  security_groups               = [local.sg_map[each.key]]
+  resource_group                = data.ibm_resource_group.rg.id
 
   primary_ip {
     auto_delete = false
@@ -90,13 +91,14 @@ resource "ibm_is_virtual_network_interface" "vni-active" {
 }
 
 resource "ibm_is_virtual_network_interface" "vni-passive" {
-  for_each                  = local.passive
-  name                      = "${var.CLUSTER_NAME}-fgt2-${each.key}-${random_string.random_suffix.result}"
-  allow_ip_spoofing         = false
-  auto_delete               = false
-  enable_infrastructure_nat = true
-  resource_group            = data.ibm_resource_group.rg.id
-  security_groups           = [local.sg_map[each.key]]
+  for_each                      = local.passive
+  name                          = "${var.CLUSTER_NAME}-fgt2-${each.key}-${random_string.random_suffix.result}"
+  allow_ip_spoofing             = each.key == "interface2" # port2 - trusted data interface
+  protocol_state_filtering_mode = each.key == "interface2" ? "disabled" : null
+  auto_delete                   = false
+  enable_infrastructure_nat     = true
+  resource_group                = data.ibm_resource_group.rg.id
+  security_groups               = [local.sg_map[each.key]]
 
   primary_ip {
     auto_delete = false
